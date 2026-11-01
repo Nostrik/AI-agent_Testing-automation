@@ -1,10 +1,17 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      network: host                          # сборка через сеть хоста: меньше проблем с DNS
+      # args:                                # другие зеркала PyPI, если эти недоступны
+      #   PIP_INDEX_URL: https://pypi.tuna.tsinghua.edu.cn/simple
+      #   PIP_EXTRA_INDEX_URL: https://mirrors.aliyun.com/pypi/simple/
     image: agent-tester
     container_name: agent-tester
     restart: unless-stopped
     env_file: .env
+    environment:
+      HF_ENDPOINT: ${HF_ENDPOINT:-https://huggingface.co}   # модели Whisper; без VPN можно https://hf-mirror.com
     # Только через Tailscale: порт открыт на tailscale-адресе сервера (TAILSCALE_IP в .env, узнать: tailscale ip -4).
     # Для tailscale serve (HTTPS) укажи TAILSCALE_IP=127.0.0.1. Docker обходит ufw, поэтому "8501:8501" открыл бы порт всем.
     ports:

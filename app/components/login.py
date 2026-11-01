@@ -14,6 +14,22 @@ import streamlit.components.v1 as components
 from core.auth import REMEMBER_DAYS, check_login, locked_for, make_token, parse_token
 
 COOKIE = "tester_auth"
+FORM_WIDTH_PX = 450
+
+
+def _limit_width():
+    """Сужает страницу входа и ставит по центру. CSS есть только на этой странице,
+    поэтому после входа тестер остаётся широким."""
+    st.markdown(
+        f"""<style>
+        .stMainBlockContainer, .block-container {{
+            max-width: {FORM_WIDTH_PX}px;
+            margin-left: auto;
+            margin-right: auto;
+        }}
+        </style>""",
+        unsafe_allow_html=True,
+    )
 
 
 def _write_cookie(value: str, max_age: int):
@@ -46,6 +62,7 @@ def current_user() -> str | None:
 
 def login_page():
     _flush_cookie()
+    _limit_width()
     st.title("🔐 Вход")
     st.caption("Автотестер ИИ-агентов. Учётную запись выдаёт администратор.")
     with st.form("login", clear_on_submit=False):
