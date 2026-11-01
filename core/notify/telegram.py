@@ -21,6 +21,8 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 API = "https://api.telegram.org/bot{token}/{method}"
 STATUS = {"done": "✅ завершён", "stopped": "⏹ остановлен", "error": "❌ упал с ошибкой"}
+CHANNELS = {"auto": "Telegram, при сбое — почта", "telegram": "Только Telegram",
+            "email": "Только почта", "off": "Выключены"}
 
 log = logging.getLogger("tester.telegram")                 # пишет в консоль, где запущен Streamlit
 if not log.handlers:
@@ -57,6 +59,35 @@ def _call(token: str, method: str, **kw):
 
 
 def _send(what: str, text: str, doc: tuple[str, bytes, str] | None = None) -> str | None:
+    """Отправка по выбранному каналу. None — отправлено, иначе причина."""
+    from core.notify import mail
+
+    ch = channel()
+    if ch == "off":
+        log.info("%s: оповещения выключены", what)
+        return "оповещения выключены"
+    errors = []
+    if ch == "telegram" or (ch == "auto" and (_token() or not mail.configured())):
+        err = _send_telegram(what, text, doc)
+        if not err:
+            return None
+        errors.append(f"Telegram: {err}")
+        if ch == "telegram":
+            return errors[0]
+    if not mail.configured():
+        errors.append("почта: не заданы SMTP_USER и NOTIFY_EMAIL_TO в .env")
+        return "; ".join(errors)
+    try:
+        mail.send_email(text, doc)
+        log.info("%s: письмо отправлено", what)
+        return None
+    except Exception as e:  # noqa: BLE001
+        log.exception("%s: письмо не отправлено", what)
+        errors.append(f"почта: {e}")
+    return "; ".join(errors)
+
+
+def _send_telegram(what: str, text: str, doc: tuple[str, bytes, str] | None = None) -> str | None:
     """Сообщение (HTML) и, если есть, файл (имя, байты, тип). None — отправлено, иначе причина."""
     token = _token()
     if not token:
@@ -78,6 +109,13 @@ def _send(what: str, text: str, doc: tuple[str, bytes, str] | None = None) -> st
         return f"не отправлено: {e}"
     log.info("%s: отправлено", what)
     return None
+
+
+def channel() -> str:
+    """Канал из настроек тестера (выбор на боковой панели), по умолчанию auto."""
+    from core.storage.db import get_settings
+    ch = get_settings().get("notify_channel", "auto")
+    return ch if ch in CHANNELS else "auto"
 
 
 def notify_run(run_id: int, project: dict, status: str, error: str | None = None) -> str | None:

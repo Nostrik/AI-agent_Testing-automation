@@ -10,9 +10,9 @@ import pandas as pd  # noqa: E402
 import streamlit as st  # noqa: E402
 
 from core import storage  # noqa: E402
-from app.ui import show_flash  # noqa: E402
 
 from app.components.login import current_user, login_page, logout_button  # noqa: E402
+from app.components.notify_select import notify_select  # noqa: E402
 from app.ui import show_flash  # noqa: E402
 
 st.set_page_config(page_title="Автотестер агентов", page_icon="🧪", layout="wide")
@@ -68,5 +68,6 @@ if not current_user():
     st.navigation([st.Page(login_page, title="Вход", icon="🔐")]).run()
 else:
     logout_button()
+    notify_select()
     show_flash()
     st.navigation(pages).run()
