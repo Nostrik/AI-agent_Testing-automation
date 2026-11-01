@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    image: agent-tester
+    container_name: agent-tester
+    restart: unless-stopped
+    env_file: .env
+    # Только через Tailscale: порт открыт на tailscale-адресе сервера (TAILSCALE_IP в .env, узнать: tailscale ip -4).
+    # Для tailscale serve (HTTPS) укажи TAILSCALE_IP=127.0.0.1. Docker обходит ufw, поэтому "8501:8501" открыл бы порт всем.
+    ports:
+      - "${TAILSCALE_IP:?укажи TAILSCALE_IP в .env}:8501:8501"
+    volumes:
+      - ./data:/app/data                     # база, прогоны, аудио, секрет cookie (.auth_secret)
+      - hf_cache:/root/.cache/huggingface    # модели faster-whisper, чтобы не качать после пересборки
+
+volumes:
+  hf_cache:

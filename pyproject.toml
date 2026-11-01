@@ -1,0 +1,35 @@
+[project]
+name = "agent-tester"
+version = "0.1.0"
+description = "Автотестер диалоговых ИИ-агентов: симулятор клиента, судья, метрики, автоподбор"
+requires-python = ">=3.11"
+dependencies = [
+    "streamlit>=1.38",
+    "openai>=1.40",
+    "requests>=2.32",
+    "websocket-client>=1.8",
+    "pydantic>=2.7",
+    "sqlmodel>=0.0.21",
+    "cryptography>=43",
+    "pyyaml>=6",
+    "pandas>=2.2",
+    "openpyxl>=3.1",
+    "plotly>=5.22",
+    "optuna>=4.0",
+    "python-dotenv>=1.0",
+    "typer>=0.12",
+    "faster-whisper>=1.1",
+    "gradio-client (>=2.7.2,<3.0.0)",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.scripts]
+tester = "cli:app"
+
+[tool.ruff]
+line-length = 110
+
+[tool.poetry]
+package-mode = false
