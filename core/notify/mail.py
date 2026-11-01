@@ -37,7 +37,8 @@ def send_email(text: str, doc: tuple[str, bytes, str] | None = None):
     msg.add_alternative(f"<html><body style='font-family:sans-serif'>{body}</body></html>", subtype="html")
     if doc:
         main, _, sub = doc[2].partition("/")
-        msg.add_attachment(doc[1], maintype=main, subtype=sub, filename=doc[0])
+        msg.add_attachment(doc[1], maintype=main, subtype=sub, filename=doc[0],
+                           params={"charset": "utf-8"} if main == "text" else None)   # иначе кириллица в .txt — кракозябры
 
     ctx = ssl.create_default_context()
     if port == 465:
