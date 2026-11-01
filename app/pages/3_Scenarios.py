@@ -43,6 +43,30 @@ if st.button("💾 Сохранить список", type="primary"):
     flash(f"Сохранено сценариев: {len(keep)}")
     st.rerun()
 
+with st.expander("📋 Вставить таблицу сценариев (из Excel или файла, колонки через Tab)"):
+    st.caption("Колонки по порядку: ID, персона, поведение, факты, особая проверка, ожидаемый исход. "
+               "Сценарий с тем же ID обновится (реплики и эталон сохранятся), новый — создастся.")
+    tsv = st.text_area("Таблица", height=220, key="scen_tsv")
+    rows = []
+    for line in tsv.splitlines():
+        cells = [c.strip() for c in line.split("\t")]
+        if not cells[0] or cells[0].lower() in ("id", "sid"):          # пустые строки и заголовок
+            continue
+        cells += [""] * (6 - len(cells))
+        rows.append(dict(zip(("sid", "persona", "behavior", "facts", "check_text", "expected"), cells[:6])))
+    if rows:
+        unknown = sorted({r["expected"] for r in rows if r["expected"] and r["expected"] not in codes})
+        st.write(f"Строк: {len(rows)}")
+        if unknown:
+            st.warning("Таких исходов нет в проекте: " + ", ".join(unknown) + ". Добавьте их на странице «Проект».")
+        if st.button("📋 Сохранить сценарии", type="primary"):
+            by_sid = {x["sid"]: x for x in scen}
+            for r in rows:
+                base = by_sid.get(r["sid"]) or {"script": [], "golden": "", "project_id": project["id"]}
+                storage.save("scenarios", {**base, **r})
+            flash(f"Сохранено сценариев: {len(rows)}")
+            st.rerun()
+
 with st.expander("📥 Импорт реплик клиента из выгрузки прогона («[id] 🙂 Клиент: …»)"):
     st.caption("Реплики клиента попадут в шаблон сценария с тем же ID; если такого ID нет — сценарий будет создан.")
     log_txt = st.text_area("Выгрузка прогона", height=220, key="run_log")
